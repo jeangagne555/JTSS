@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36414.22 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JTSS.Core", "JTSS.Core\JTSS.Core.csproj", "{6AEB03F0-5D99-4F2B-A3AF-B1072220C9F5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JTSS.Core.Tests", "JTSS.Core.Tests\JTSS.Core.Tests.csproj", "{003CBFF0-F872-4E20-AFC1-6A2AAC3299D5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6AEB03F0-5D99-4F2B-A3AF-B1072220C9F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6AEB03F0-5D99-4F2B-A3AF-B1072220C9F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6AEB03F0-5D99-4F2B-A3AF-B1072220C9F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6AEB03F0-5D99-4F2B-A3AF-B1072220C9F5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{003CBFF0-F872-4E20-AFC1-6A2AAC3299D5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{003CBFF0-F872-4E20-AFC1-6A2AAC3299D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{003CBFF0-F872-4E20-AFC1-6A2AAC3299D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{003CBFF0-F872-4E20-AFC1-6A2AAC3299D5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3345ED27-970A-42DB-AFC7-3983DE2EB6E0}
+	EndGlobalSection
+EndGlobal
