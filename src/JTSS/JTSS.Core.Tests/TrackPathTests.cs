@@ -54,8 +54,6 @@ public class TrackPathTests
 
     #region Movement Tests
 
-    // --- START OF FIX ---
-    // The test signature now includes parameters for the initial start and end distances.
     [Theory]
     [MemberData(nameof(StraightPathMoveData))]
     public void Move_OnStraightTrack_MovesEndpointsCorrectlyAndMaintainsLengthConsistency(
@@ -66,7 +64,6 @@ public class TrackPathTests
     {
         // Arrange
         var (segA, segB) = BuildStraightLayout();
-        // The path is now created using the parameterized start and end positions.
         var startPos = new TrackPosition(segA, initialStartDist);
         var endPos = new TrackPosition(segB, initialEndDist);
         var path = new TrackPath(startPos, endPos, _navigator);
@@ -88,23 +85,13 @@ public class TrackPathTests
         Assert.Equal(movedPath.Length, calculatedDistance.Value, 1);
     }
 
-    // The test data now includes the initial start and end distances for each scenario.
     public static IEnumerable<object[]> StraightPathMoveData =>
         new List<object[]>
         {
-            // Case 1: Simple forward move
-            // Start(A@20), End(B@80) -> Move Fwd 30m -> New Start(A@50), New End(B@110)
             new object[] { 20.0, 80.0, PathDirection.Forward, 30.0, "seg-A", 50.0, "seg-B", 110.0 },
-            
-            // Case 2: Simple backward move
-            // Start(A@20), End(B@80) -> Move Bwd 15m -> New Start(A@5), New End(B@65)
             new object[] { 20.0, 80.0, PathDirection.Backward, 15.0, "seg-A", 5.0, "seg-B", 65.0 },
-            
-            // Case 3: THE FAILING CASE, NOW CORRECTED
-            // Start(A@80), End(B@80) -> Move Fwd 40m -> New Start(B@20), New End(B@120)
             new object[] { 80.0, 80.0, PathDirection.Forward, 40.0, "seg-B", 20.0, "seg-B", 120.0 },
         };
-    // --- END OF FIX ---
 
     [Theory]
     [MemberData(nameof(WyePathMoveData))]
@@ -161,26 +148,16 @@ public class TrackPathTests
     #region Merge Tests
 
     [Fact]
-    public void Merge_WithValidAdjoiningPath_CreatesCorrectCombinedPath()
+    public void Merge_WithExactAdjoiningPath_CreatesCorrectCombinedPath()
     {
         // Arrange
-        // Create a layout: A(100) -- B(200) -- C(150)
-        var segA = _network.AddTrackSegment("seg-A", 100);
-        var segB = _network.AddTrackSegment("seg-B", 200);
-        var segC = _network.AddTrackSegment("seg-C", 150);
-        var node1 = _network.AddStraightNode("node-1");
-        var node2 = _network.AddStraightNode("node-2");
-        node1.Connect(new TrackConnection(segA, SegmentEnd.Right), new TrackConnection(segB, SegmentEnd.Left));
-        node2.Connect(new TrackConnection(segB, SegmentEnd.Right), new TrackConnection(segC, SegmentEnd.Left));
-
-        // Path 1: From 50m on A to 70m on B
+        var (segA, segB) = BuildStraightLayout();
         var path1_start = new TrackPosition(segA, 50.0);
-        var path1_end_and_path2_start = new TrackPosition(segB, 70.0);
-        var path1 = new TrackPath(path1_start, path1_end_and_path2_start, _navigator);
+        var common_pos = new TrackPosition(segB, 70.0);
+        var path2_end = new TrackPosition(segB, 150.0);
 
-        // Path 2: From 70m on B to 100m on C
-        var path2_end = new TrackPosition(segC, 100.0);
-        var path2 = new TrackPath(path1_end_and_path2_start, path2_end, _navigator);
+        var path1 = new TrackPath(path1_start, common_pos, _navigator);
+        var path2 = new TrackPath(common_pos, path2_end, _navigator);
 
         double expectedLength = path1.Length + path2.Length;
 
@@ -189,21 +166,43 @@ public class TrackPathTests
 
         // Assert
         Assert.NotNull(mergedPath);
-        Assert.Equal(path1.StartPosition, mergedPath.StartPosition); // Start of the first path
-        Assert.Equal(path2.EndPosition, mergedPath.EndPosition);     // End of the second path
+        Assert.Equal(path1.StartPosition, mergedPath.StartPosition);
+        Assert.Equal(path2.EndPosition, mergedPath.EndPosition);
         Assert.Equal(expectedLength, mergedPath.Length, 1);
     }
 
     [Fact]
-    public void Merge_WithNonAdjoiningPath_ThrowsArgumentException()
+    public void Merge_WithAdjoiningPathWithinTolerance_Succeeds()
     {
         // Arrange
-        var (segA, segB) = BuildStraightLayout();
+        var (segA, _) = BuildStraightLayout();
+        var path1_start = new TrackPosition(segA, 10.0);
+        var path1_end = new TrackPosition(segA, 50.0);
 
+        var path2_start = new TrackPosition(segA, 50.0 + (TrackPrecision.Tolerance / 2));
+        var path2_end = new TrackPosition(segA, 90.0);
+
+        var path1 = new TrackPath(path1_start, path1_end, _navigator);
+        var path2 = new TrackPath(path2_start, path2_end, _navigator);
+
+        // Act
+        var mergedPath = path1.Merge(path2);
+
+        // Assert
+        Assert.NotNull(mergedPath);
+        Assert.Equal(path1.StartPosition, mergedPath.StartPosition);
+        Assert.Equal(path2.EndPosition, mergedPath.EndPosition);
+    }
+
+    [Fact]
+    public void Merge_WithNonAdjoiningPathOutsideTolerance_ThrowsArgumentException()
+    {
+        // Arrange
+        var (segA, _) = BuildStraightLayout();
         var path1 = new TrackPath(new TrackPosition(segA, 10), new TrackPosition(segA, 50), _navigator);
 
-        // This path starts at A@50.1, which is NOT where path1 ends.
-        var path2 = new TrackPath(new TrackPosition(segA, 50.1), new TrackPosition(segA, 90), _navigator);
+        var path2_start_dist = 50.0 + TrackPrecision.Tolerance + 0.1;
+        var path2 = new TrackPath(new TrackPosition(segA, path2_start_dist), new TrackPosition(segA, 90), _navigator);
 
         // Act & Assert
         var ex = Assert.Throws<ArgumentException>(() => path1.Merge(path2));

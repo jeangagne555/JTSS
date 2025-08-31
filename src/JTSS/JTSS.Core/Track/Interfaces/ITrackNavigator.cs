@@ -42,4 +42,13 @@ public interface ITrackNavigator
     /// (e.g., disconnected tracks or a switch set against the path).
     /// </returns>
     double? GetDistanceBetween(ITrackPosition positionA, ITrackPosition positionB);
+
+    /// <summary>
+    /// Determines if two track positions are effectively the same, within the simulation's tolerance.
+    /// This method correctly handles positions on different segments that are close to a common node.
+    /// </summary>
+    /// <param name="positionA">The first position.</param>
+    /// <param name="positionB">The second position.</param>
+    /// <returns>True if the distance between the positions is within the defined tolerance.</returns>
+    bool ArePositionsApproximatelyEqual(ITrackPosition positionA, ITrackPosition positionB);
 }

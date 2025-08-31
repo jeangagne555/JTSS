@@ -77,7 +77,6 @@ public class TrackNavigator : ITrackNavigator
 
         while (distanceRemaining > 0)
         {
-            // Calculate the distance available on the current segment in the direction of travel.
             double distanceOnThisSegment;
             if (currentDirection == TravelDirection.LeftToRight)
             {
@@ -88,8 +87,9 @@ public class TrackNavigator : ITrackNavigator
                 distanceOnThisSegment = currentDistanceFromLeft;
             }
 
-            // --- Case 1: The move finishes on the current segment. ---
-            if (distanceRemaining <= distanceOnThisSegment)
+            // --- START OF FIX 1: Use strict inequality ---
+            // If the move distance is less than what's available, it finishes here.
+            if (distanceRemaining < distanceOnThisSegment)
             {
                 double finalDistanceFromLeft = (currentDirection == TravelDirection.LeftToRight)
                     ? currentDistanceFromLeft + distanceRemaining
@@ -97,33 +97,32 @@ public class TrackNavigator : ITrackNavigator
 
                 return new TrackPosition(currentSegment, finalDistanceFromLeft);
             }
+            // --- END OF FIX 1 ---
 
-            // --- Case 2: The move will cross over to the next segment. ---
-
-            // Consume the distance from this segment.
+            // If we reach here, the move will consume the rest of the segment and cross a node.
             distanceRemaining -= distanceOnThisSegment;
 
-            // Find the next segment.
             NavigationResult? navigationResult = NavigateToNextSegment(currentSegment, currentDirection);
 
-            // If there's no next segment, we've run off the track.
             if (navigationResult == null)
             {
-                return null;
+                return null; // Moved off the end of the track
             }
 
-            // Update our state to be on the new segment.
+            // Update state for the next loop iteration
             currentSegment = navigationResult.NextSegment;
             currentDirection = navigationResult.NewDirection;
-
-            // The new position is at the very start of the new segment, from the perspective of our travel direction.
             currentDistanceFromLeft = (currentDirection == TravelDirection.LeftToRight)
                 ? 0.0
+                // This was also a potential source of error. It should be the full length.
                 : currentSegment.Length;
         }
 
-        // This should not be reached if distanceInMeters > 0, but provides a safe fallback.
-        return null;
+        // --- START OF FIX 2: Handle landing exactly on a node ---
+        // If the loop finishes, it means distanceRemaining is exactly 0. The final position
+        // is the start of the 'currentSegment' we just transitioned to.
+        return new TrackPosition(currentSegment, currentDistanceFromLeft);
+        // --- END OF FIX 2 ---
     }
 
     /// <inheritdoc/>
@@ -198,5 +197,22 @@ public class TrackNavigator : ITrackNavigator
 
         // If the queue becomes empty and we haven't found the destination, there is no path.
         return null;
+    }
+
+    /// <inheritdoc/>
+    public bool ArePositionsApproximatelyEqual(ITrackPosition positionA, ITrackPosition positionB)
+    {
+        if (ReferenceEquals(positionA, positionB)) return true;
+        if (positionA is null || positionB is null) return false;
+
+        // The GetDistanceBetween method already handles all the complexity of
+        // same-segment, different-segment, and cross-node calculations.
+        double? distance = GetDistanceBetween(positionA, positionB);
+
+        // If there is no path, they are not equal.
+        if (!distance.HasValue) return false;
+
+        // They are approximately equal if the distance between them is within our tolerance.
+        return distance.Value <= TrackPrecision.Tolerance;
     }
 }

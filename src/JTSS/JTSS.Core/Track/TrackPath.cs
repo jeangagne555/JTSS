@@ -94,9 +94,9 @@ public class TrackPath : ITrackPath
 
         // The core validation: the two paths must be perfectly continuous.
         // We can rely on the value-based equality of the TrackPosition record.
-        if (this.EndPosition != adjoiningPath.StartPosition)
+        if (!_navigator.ArePositionsApproximatelyEqual(this.EndPosition, adjoiningPath.StartPosition))
         {
-            throw new ArgumentException("Paths are not adjoining. The end of the first path must be the same as the start of the second path.", nameof(adjoiningPath));
+            throw new ArgumentException("Paths are not adjoining. The end of the first path must be within tolerance of the start of the second path.", nameof(adjoiningPath));
         }
 
         // The constructor does the heavy lifting of calculating the new total length
