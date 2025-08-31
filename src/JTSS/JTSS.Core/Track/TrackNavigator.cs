@@ -139,24 +139,16 @@ public class TrackNavigator : ITrackNavigator
         }
 
         // --- Case 2: Positions are on different segments. Use BFS to find the shortest path. ---
-
-        // A queue for our search state: (fromSegment, atNode, distanceToThisNode)
         var queue = new Queue<(ITrackSegment, ITrackNode, double)>();
-
-        // A dictionary to track visited nodes and the shortest distance to them.
         var visitedNodes = new Dictionary<string, double>();
 
         // --- Initialize the search from positionA ---
-
-        // Path towards the Left node
         if (positionA.Segment.LeftEndNode != null)
         {
             double distToLeftNode = positionA.DistanceFromLeftEnd;
             queue.Enqueue((positionA.Segment, positionA.Segment.LeftEndNode, distToLeftNode));
             visitedNodes[positionA.Segment.LeftEndNode.Id] = distToLeftNode;
         }
-
-        // Path towards the Right node
         if (positionA.Segment.RightEndNode != null)
         {
             double distToRightNode = positionA.Segment.Length - positionA.DistanceFromLeftEnd;
@@ -169,23 +161,26 @@ public class TrackNavigator : ITrackNavigator
         {
             var (fromSegment, currentNode, distanceToCurrentNode) = queue.Dequeue();
 
-            // Find all possible next segments from the current node
             foreach (var nextSegment in currentNode.GetValidPaths(fromSegment))
             {
                 // --- Check if this next segment is our destination. ---
                 if (nextSegment.Id == positionB.Segment.Id)
                 {
                     double finalDistanceOnSegment;
-                    // We need to know which node we arrived at on the destination segment
-                    var arrivalNode = nextSegment.GetOppositeNode(currentNode);
-                    if (arrivalNode == positionB.Segment.LeftEndNode) // Arrived at the left
+
+                    // --- START OF FIX ---
+                    // The node we arrived at on the new segment is the currentNode from the previous segment.
+                    if (currentNode == positionB.Segment.LeftEndNode) // Arrived at the left end
                     {
+                        // The distance needed is from the left end to the position.
                         finalDistanceOnSegment = positionB.DistanceFromLeftEnd;
                     }
-                    else // Arrived at the right
+                    else // Arrived at the right end
                     {
+                        // The distance needed is from the right end to the position.
                         finalDistanceOnSegment = positionB.Segment.Length - positionB.DistanceFromLeftEnd;
                     }
+                    // --- END OF FIX ---
 
                     return distanceToCurrentNode + finalDistanceOnSegment;
                 }
