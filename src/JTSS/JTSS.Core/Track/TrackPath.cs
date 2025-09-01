@@ -12,11 +12,15 @@ public class TrackPath : ITrackPath
     public ITrackPosition StartPosition { get; }
     public ITrackPosition EndPosition { get; }
     public double Length { get; }
+    public IReadOnlyCollection<ITrackSegment> CoveredSegments { get; }
 
     // Private fields to store the pre-calculated orientation
     private readonly ITrackNavigator _navigator;
     private readonly TravelDirection _startTravelDirectionForward;
     private readonly TravelDirection _endTravelDirectionForward;
+
+    // --- Private Field for Fast Lookups ---
+    private readonly HashSet<string> _coveredSegmentIds;
 
     /// <summary>
     /// Creates a new TrackPath. The constructor calculates and stores the path's orientation.
@@ -44,6 +48,11 @@ public class TrackPath : ITrackPath
 
         // 3. Determine the "Forward" TravelDirection for the EndPosition.
         _endTravelDirectionForward = DetermineForwardDirection(EndPosition, StartPosition, true);
+
+        _coveredSegmentIds = new HashSet<string>();
+        var segmentList = new List<ITrackSegment>();
+        PopulateCoveredSegments(segmentList);
+        CoveredSegments = segmentList;
     }
 
     /// <inheritdoc/>
@@ -177,6 +186,14 @@ public class TrackPath : ITrackPath
         return maxSpan <= sumOfLengths + TrackPrecision.Tolerance;
     }
 
+    /// <inheritdoc/>
+    public bool IsOnSegment(ITrackSegment segment)
+    {
+        ArgumentNullException.ThrowIfNull(segment);
+        // This is an O(1) hash set lookup - extremely fast.
+        return _coveredSegmentIds.Contains(segment.Id);
+    }
+
     /// <summary>
     /// Determines the TravelDirection that moves point A towards point B.
     /// </summary>
@@ -223,5 +240,47 @@ public class TrackPath : ITrackPath
     private static TravelDirection OppositeDirection(TravelDirection dir)
     {
         return dir == TravelDirection.LeftToRight ? TravelDirection.RightToLeft : TravelDirection.LeftToRight;
+    }
+
+    /// <summary>
+    /// Traverses the path once to build the cache of covered segments and their IDs.
+    /// </summary>
+    private void PopulateCoveredSegments(List<ITrackSegment> segmentList)
+    {
+        var currentSegment = this.StartPosition.Segment;
+        var currentDirection = _startTravelDirectionForward;
+
+        _coveredSegmentIds.Add(currentSegment.Id);
+        segmentList.Add(currentSegment);
+
+        // If the path is contained within a single segment, we are done.
+        if (currentSegment.Id == this.EndPosition.Segment.Id)
+        {
+            return;
+        }
+
+        // Walk the path from start to end, collecting segments.
+        while (true)
+        {
+            var navResult = _navigator.NavigateToNextSegment(currentSegment, currentDirection);
+
+            // This should not happen in a valid path, but is a safeguard.
+            if (navResult == null)
+            {
+                throw new InvalidOperationException("Path traversal failed unexpectedly during segment caching. The path may be inconsistent.");
+            }
+
+            currentSegment = navResult.NextSegment;
+            currentDirection = navResult.NewDirection;
+
+            _coveredSegmentIds.Add(currentSegment.Id);
+            segmentList.Add(currentSegment);
+
+            // If we've just added the destination segment, we're finished.
+            if (currentSegment.Id == this.EndPosition.Segment.Id)
+            {
+                break;
+            }
+        }
     }
 }

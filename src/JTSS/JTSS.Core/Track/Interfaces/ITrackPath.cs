@@ -58,4 +58,11 @@ public interface ITrackPath
     /// <param name="otherPath">The path to check for intersection.</param>
     /// <returns>True if the paths touch or overlap, false otherwise.</returns>
     bool IntersectsWith(ITrackPath otherPath);
+
+    /// <summary>
+    /// Performs a fast check to see if this path occupies any part of a given track segment.
+    /// </summary>
+    /// <param name="segment">The track segment to check for.</param>
+    /// <returns>True if the path starts, ends, or passes through the segment.</returns>
+    bool IsOnSegment(ITrackSegment segment);
 }

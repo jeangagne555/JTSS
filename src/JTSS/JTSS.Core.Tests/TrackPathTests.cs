@@ -352,6 +352,55 @@ public class TrackPathTests
 
     #endregion
 
+    #region IsOnSegment Tests
+
+    [Fact]
+    public void IsOnSegment_ForPathOnSingleSegment_ReturnsCorrectValues()
+    {
+        // Arrange
+        var (segA, segB) = BuildStraightLayout();
+        var path = new TrackPath(
+            new TrackPosition(segA, 20.0),
+            new TrackPosition(segA, 80.0),
+            _navigator);
+
+        // Act & Assert
+        Assert.True(path.IsOnSegment(segA));
+        Assert.False(path.IsOnSegment(segB));
+        Assert.Single(path.CoveredSegments);
+    }
+
+    [Fact]
+    public void IsOnSegment_ForPathSpanningMultipleSegments_ReturnsCorrectValuesForAllSegments()
+    {
+        // Arrange
+        // Layout: A -- B -- C
+        var segA = _network.AddTrackSegment("seg-A", 100);
+        var segB = _network.AddTrackSegment("seg-B", 100);
+        var segC = _network.AddTrackSegment("seg-C", 100);
+        var segD = _network.AddTrackSegment("seg-D", 100); // An unrelated segment
+        var node1 = _network.AddStraightNode("node-1");
+        var node2 = _network.AddStraightNode("node-2");
+        node1.Connect(new TrackConnection(segA, SegmentEnd.Right), new TrackConnection(segB, SegmentEnd.Left));
+        node2.Connect(new TrackConnection(segB, SegmentEnd.Right), new TrackConnection(segC, SegmentEnd.Left));
+
+        // Path from middle of A to middle of C, crossing all of B.
+        var path = new TrackPath(
+            new TrackPosition(segA, 50.0),
+            new TrackPosition(segC, 50.0),
+            _navigator);
+
+        // Act & Assert
+        Assert.True(path.IsOnSegment(segA)); // The start segment
+        Assert.True(path.IsOnSegment(segB)); // The middle segment
+        Assert.True(path.IsOnSegment(segC)); // The end segment
+        Assert.False(path.IsOnSegment(segD)); // The unrelated segment
+
+        Assert.Equal(3, path.CoveredSegments.Count);
+    }
+
+    #endregion
+
     #region Helper Methods
 
     private (ITrackSegment, ITrackSegment) BuildStraightLayout()
