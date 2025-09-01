@@ -51,4 +51,11 @@ public interface ITrackPath
     /// <returns>A tuple containing the first and second path segments after the split.</returns>
     /// <exception cref="ArgumentOutOfRangeException">Thrown if the distance is negative or greater than the path's length.</exception>
     (ITrackPath first, ITrackPath second) Split(double distanceFromOrigin, SplitOrigin origin);
+
+    /// <summary>
+    /// Determines if this path shares any common track portion with another path.
+    /// </summary>
+    /// <param name="otherPath">The path to check for intersection.</param>
+    /// <returns>True if the paths touch or overlap, false otherwise.</returns>
+    bool IntersectsWith(ITrackPath otherPath);
 }

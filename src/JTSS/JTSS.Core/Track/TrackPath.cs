@@ -137,6 +137,46 @@ public class TrackPath : ITrackPath
         return (first, second);
     }
 
+    /// <inheritdoc/>
+    public bool IntersectsWith(ITrackPath otherPath)
+    {
+        ArgumentNullException.ThrowIfNull(otherPath);
+
+        // A path always intersects with itself.
+        if (ReferenceEquals(this, otherPath))
+        {
+            return true;
+        }
+
+        // Get the four endpoints.
+        var thisStart = this.StartPosition;
+        var thisEnd = this.EndPosition;
+        var otherStart = otherPath.StartPosition;
+        var otherEnd = otherPath.EndPosition;
+
+        // Calculate the distances between all four endpoint pairs.
+        var dist_ss = _navigator.GetDistanceBetween(thisStart, otherStart);
+        var dist_se = _navigator.GetDistanceBetween(thisStart, otherEnd);
+        var dist_es = _navigator.GetDistanceBetween(thisEnd, otherStart);
+        var dist_ee = _navigator.GetDistanceBetween(thisEnd, otherEnd);
+
+        // If any distance is null, the paths are on disconnected track segments and cannot intersect.
+        if (!dist_ss.HasValue || !dist_se.HasValue || !dist_es.HasValue || !dist_ee.HasValue)
+        {
+            return false;
+        }
+
+        // Find the maximum distance between any two endpoints. This is the total span of both paths combined.
+        double maxSpan = Math.Max(Math.Max(dist_ss.Value, dist_se.Value), Math.Max(dist_es.Value, dist_ee.Value));
+
+        // Calculate the sum of the individual path lengths.
+        double sumOfLengths = this.Length + otherPath.Length;
+
+        // The paths intersect if their combined span is less than or equal to the sum of their lengths
+        // (within our simulation's tolerance for floating point comparisons).
+        return maxSpan <= sumOfLengths + TrackPrecision.Tolerance;
+    }
+
     /// <summary>
     /// Determines the TravelDirection that moves point A towards point B.
     /// </summary>
