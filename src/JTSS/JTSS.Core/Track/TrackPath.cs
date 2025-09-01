@@ -104,6 +104,39 @@ public class TrackPath : ITrackPath
         return new TrackPath(this.StartPosition, adjoiningPath.EndPosition, this._navigator);
     }
 
+    /// <inheritdoc/>
+    public (ITrackPath first, ITrackPath second) Split(double distanceFromOrigin, SplitOrigin origin)
+    {
+        if (distanceFromOrigin < 0 || distanceFromOrigin > this.Length)
+        {
+            throw new ArgumentOutOfRangeException(nameof(distanceFromOrigin),
+                $"Split distance must be between 0 and the path's length ({this.Length:F1}m).");
+        }
+
+        ITrackPosition splitPosition;
+
+        // Determine the split position by moving from the specified origin.
+        if (origin == SplitOrigin.FromStart)
+        {
+            // Move forward from the start of the path.
+            splitPosition = _navigator.MovePosition(this.StartPosition, _startTravelDirectionForward, distanceFromOrigin)!;
+        }
+        else // FromEnd
+        {
+            // Move backward from the end of the path.
+            var backwardDirectionFromEnd = OppositeDirection(_endTravelDirectionForward);
+            splitPosition = _navigator.MovePosition(this.EndPosition, backwardDirectionFromEnd, distanceFromOrigin)!;
+        }
+
+        // The non-null assertion (!) is safe here because we've already validated the distance.
+
+        // Create the two new paths using the calculated split position.
+        var first = new TrackPath(this.StartPosition, splitPosition, _navigator);
+        var second = new TrackPath(splitPosition, this.EndPosition, _navigator);
+
+        return (first, second);
+    }
+
     /// <summary>
     /// Determines the TravelDirection that moves point A towards point B.
     /// </summary>

@@ -42,4 +42,13 @@ public interface ITrackPath
     /// <exception cref="ArgumentException">Thrown if the provided path does not start
     /// at the exact end position of this path.</exception>
     ITrackPath Merge(ITrackPath adjoiningPath);
+
+    /// <summary>
+    /// Splits this path into two new paths at a specified distance from an origin point.
+    /// </summary>
+    /// <param name="distanceFromOrigin">The distance at which to split the path. Must be between 0 and the path's Length.</param>
+    /// <param name="origin">The point from which to measure the distance (FromStart or FromEnd).</param>
+    /// <returns>A tuple containing the first and second path segments after the split.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown if the distance is negative or greater than the path's length.</exception>
+    (ITrackPath first, ITrackPath second) Split(double distanceFromOrigin, SplitOrigin origin);
 }

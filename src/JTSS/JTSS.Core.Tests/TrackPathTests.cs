@@ -211,6 +211,103 @@ public class TrackPathTests
 
     #endregion
 
+    #region Split Tests
+
+    [Fact]
+    public void Split_FromStart_CreatesTwoCorrectPaths()
+    {
+        // Arrange
+        var (segA, segB) = BuildStraightLayout();
+        var startPos = new TrackPosition(segA, 20.0);
+        var endPos = new TrackPosition(segB, 80.0);
+        var path = new TrackPath(startPos, endPos, _navigator); // Total length = 160m
+
+        double splitDistance = 50.0;
+
+        // Act
+        var (first, second) = path.Split(splitDistance, SplitOrigin.FromStart);
+
+        // Assert
+        Assert.NotNull(first);
+        Assert.NotNull(second);
+
+        // Check endpoints
+        Assert.Equal(path.StartPosition, first.StartPosition);
+        Assert.Equal(path.EndPosition, second.EndPosition);
+        Assert.True(_navigator.ArePositionsApproximatelyEqual(first.EndPosition, second.StartPosition));
+
+        // Check lengths
+        Assert.Equal(splitDistance, first.Length, 1);
+        Assert.Equal(path.Length - splitDistance, second.Length, 1);
+    }
+
+    [Fact]
+    public void Split_FromEnd_CreatesTwoCorrectPaths()
+    {
+        // Arrange
+        var (segA, segB) = BuildStraightLayout();
+        var startPos = new TrackPosition(segA, 20.0);
+        var endPos = new TrackPosition(segB, 80.0);
+        var path = new TrackPath(startPos, endPos, _navigator); // Total length = 160m
+
+        double splitDistance = 60.0;
+
+        // Act
+        var (first, second) = path.Split(splitDistance, SplitOrigin.FromEnd);
+
+        // Assert
+        Assert.NotNull(first);
+        Assert.NotNull(second);
+
+        Assert.Equal(path.StartPosition, first.StartPosition);
+        Assert.Equal(path.EndPosition, second.EndPosition);
+        Assert.True(_navigator.ArePositionsApproximatelyEqual(first.EndPosition, second.StartPosition));
+
+        Assert.Equal(path.Length - splitDistance, first.Length, 1);
+        Assert.Equal(splitDistance, second.Length, 1);
+    }
+
+    [Fact]
+    public void Split_AtPointCrossingNode_Succeeds()
+    {
+        // Arrange
+        var (segA, segB) = BuildStraightLayout();
+        var startPos = new TrackPosition(segA, 20.0);
+        var endPos = new TrackPosition(segB, 80.0);
+        var path = new TrackPath(startPos, endPos, _navigator); // Total length = 160m
+
+        double splitDistance = 80.0; // This split point is exactly on the node between A and B
+
+        // Act
+        var (first, second) = path.Split(splitDistance, SplitOrigin.FromStart);
+
+        // Assert
+        // The split position should be at the very end of segA (or very start of segB)
+        var expectedSplitPosition = new TrackPosition(segA, 100.0);
+
+        Assert.Equal(path.StartPosition, first.StartPosition);
+        Assert.Equal(path.EndPosition, second.EndPosition);
+        Assert.True(_navigator.ArePositionsApproximatelyEqual(first.EndPosition, expectedSplitPosition));
+        Assert.True(_navigator.ArePositionsApproximatelyEqual(second.StartPosition, expectedSplitPosition));
+    }
+
+    [Theory]
+    [InlineData(-1.0)]
+    [InlineData(161.0)]
+    public void Split_WithInvalidDistance_ThrowsArgumentOutOfRangeException(double invalidDistance)
+    {
+        // Arrange
+        var (segA, segB) = BuildStraightLayout();
+        var startPos = new TrackPosition(segA, 20.0);
+        var endPos = new TrackPosition(segB, 80.0);
+        var path = new TrackPath(startPos, endPos, _navigator); // Total length = 160m
+
+        // Act & Assert
+        Assert.Throws<ArgumentOutOfRangeException>(() => path.Split(invalidDistance, SplitOrigin.FromStart));
+    }
+
+    #endregion
+
     #region Helper Methods
 
     private (ITrackSegment, ITrackSegment) BuildStraightLayout()
