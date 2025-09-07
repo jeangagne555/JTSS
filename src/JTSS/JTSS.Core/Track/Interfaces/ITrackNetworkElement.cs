@@ -9,4 +9,9 @@ public interface ITrackNetworkElement
     /// The unique, user-defined identifier for this network element.
     /// </summary>
     string Id { get; }
+
+    /// <summary>
+    /// An optional, user-friendly name for this element. Does not need to be unique.
+    /// </summary>
+    string? Name { get; set; }
 }

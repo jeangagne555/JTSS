@@ -36,17 +36,26 @@ public class ZoneTests
 
         // Assert
         Assert.Equal("zone-1", zone.Id);
+        Assert.Null(zone.Name);
         Assert.NotNull(zone.TrackPaths);
         Assert.Empty(zone.TrackPaths);
     }
 
-    // --- START OF FIX ---
+    [Fact]
+    public void Constructor_WithName_SetsNameProperty()
+    {
+        // Arrange
+        var zone = new Zone("zone-1", "Station Platform");
+
+        // Assert
+        Assert.Equal("zone-1", zone.Id);
+        Assert.Equal("Station Platform", zone.Name);
+    }
 
     [Fact]
     public void Constructor_WithNullId_ThrowsArgumentNullException()
     {
         // Act & Assert
-        // This test now specifically checks for the ArgumentNullException when the ID is null.
         Assert.Throws<ArgumentNullException>(() => new Zone(null!));
     }
 
@@ -56,12 +65,10 @@ public class ZoneTests
     public void Constructor_WithEmptyOrWhitespaceId_ThrowsArgumentException(string invalidId)
     {
         // Act & Assert
-        // This test now correctly handles only the cases that throw a generic ArgumentException.
         Assert.Throws<ArgumentException>(() => new Zone(invalidId));
     }
 
-    // --- END OF FIX ---
-
+    // ... rest of the file is unchanged
     [Fact]
     public void AddPath_AddsPathToCollection()
     {
@@ -188,7 +195,7 @@ public class ZoneTests
         var network = new TrackNetwork();
 
         // Act
-        var addedZone = network.AddZone("my-zone");
+        var addedZone = network.AddZone("my-zone", "Yard Lead");
         var retrievedZone = network.GetZoneById("my-zone");
         var retrievedElement = network.GetElementById("my-zone");
 
@@ -197,6 +204,7 @@ public class ZoneTests
         Assert.Equal(addedZone, retrievedZone);
         Assert.Equal(addedZone, retrievedElement);
         Assert.IsAssignableFrom<IZone>(retrievedElement);
+        Assert.Equal("Yard Lead", retrievedZone?.Name);
     }
 
     [Fact]

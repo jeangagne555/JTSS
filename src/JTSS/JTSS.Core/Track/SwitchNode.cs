@@ -7,6 +7,7 @@ namespace JTSS.Core.Track;
 public class SwitchNode : ISwitchNode
 {
     public string Id { get; }
+    public string? Name { get; set; }
     public ITrackSegment Facing { get; private set; }
     public ITrackSegment Trailing { get; private set; }
     public ITrackSegment Diverging { get; private set; }
@@ -15,13 +16,15 @@ public class SwitchNode : ISwitchNode
     private readonly List<ITrackSegment> _connections = new(3);
     public IReadOnlyList<ITrackSegment> Connections => _connections;
 
-    public SwitchNode(string id)
+    public SwitchNode(string id, string? name = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(id);
         Id = id;
+        Name = name;
         State = SwitchState.Normal;
     }
 
+    // ... rest of the file is unchanged
     public void Connect(TrackConnection facing, TrackConnection trailing, TrackConnection diverging)
     {
         if (_connections.Any())

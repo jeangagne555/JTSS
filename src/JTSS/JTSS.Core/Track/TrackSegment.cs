@@ -1,10 +1,5 @@
 ﻿using JTSS.Core.Track.Enums;
 using JTSS.Core.Track.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace JTSS.Core.Track;
 
@@ -14,11 +9,12 @@ namespace JTSS.Core.Track;
 public class TrackSegment : ITrackSegment
 {
     public string Id { get; }
+    public string? Name { get; set; }
     public double Length { get; }
     public ITrackNode LeftEndNode { get; private set; }
     public ITrackNode RightEndNode { get; private set; }
 
-    public TrackSegment(string id, double length)
+    public TrackSegment(string id, double length, string? name = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(id);
         if (length <= 0)
@@ -27,8 +23,10 @@ public class TrackSegment : ITrackSegment
         }
         Id = id;
         Length = length;
+        Name = name;
     }
 
+    // ... rest of the file is unchanged
     public void SetNodeAt(SegmentEnd end, ITrackNode node)
     {
         ArgumentNullException.ThrowIfNull(node);

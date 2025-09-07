@@ -1,4 +1,5 @@
 ﻿using JTSS.Core.Track.Interfaces;
+using System.Linq;
 
 namespace JTSS.Core.Track;
 
@@ -8,6 +9,7 @@ namespace JTSS.Core.Track;
 public class Zone : IZone
 {
     public string Id { get; }
+    public string? Name { get; set; }
 
     private readonly List<ITrackPath> _trackPaths = new();
     public IReadOnlyList<ITrackPath> TrackPaths => _trackPaths;
@@ -16,12 +18,15 @@ public class Zone : IZone
     /// Initializes a new instance of the Zone class.
     /// </summary>
     /// <param name="id">The unique identifier for the zone.</param>
-    public Zone(string id)
+    /// <param name="name">An optional, user-friendly name for the zone.</param>
+    public Zone(string id, string? name = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(id);
         Id = id;
+        Name = name;
     }
 
+    // ... rest of the file is unchanged
     /// <inheritdoc/>
     public void AddPath(ITrackPath path)
     {

@@ -30,44 +30,44 @@ public class TrackNetwork : ITrackNetwork
         return GetElementById(id) as IZone;
     }
 
-    public ITrackSegment AddTrackSegment(string id, double length)
+    public ITrackSegment AddTrackSegment(string id, double length, string? name = null)
     {
-        var segment = new TrackSegment(id, length);
+        var segment = new TrackSegment(id, length, name);
         RegisterElement(segment);
         return segment;
     }
 
-    public IStraightNode AddStraightNode(string id)
+    public IStraightNode AddStraightNode(string id, string? name = null)
     {
-        var node = new StraightNode(id);
+        var node = new StraightNode(id, name);
         RegisterElement(node);
         return node;
     }
 
-    public ISwitchNode AddSwitchNode(string id)
+    public ISwitchNode AddSwitchNode(string id, string? name = null)
     {
-        var node = new SwitchNode(id);
+        var node = new SwitchNode(id, name);
         RegisterElement(node);
         return node;
     }
 
-    public ICrossingNode AddCrossingNode(string id)
+    public ICrossingNode AddCrossingNode(string id, string? name = null)
     {
-        var node = new CrossingNode(id);
+        var node = new CrossingNode(id, name);
         RegisterElement(node);
         return node;
     }
 
-    public IBorderNode AddBorderNode(string id)
+    public IBorderNode AddBorderNode(string id, string? name = null)
     {
-        var node = new BorderNode(id);
+        var node = new BorderNode(id, name);
         RegisterElement(node);
         return node;
     }
 
-    public IZone AddZone(string id)
+    public IZone AddZone(string id, string? name = null)
     {
-        var zone = new Zone(id);
+        var zone = new Zone(id, name);
         RegisterElement(zone);
         return zone;
     }

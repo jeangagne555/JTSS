@@ -6,18 +6,21 @@ namespace JTSS.Core.Track;
 public class CrossingNode : ICrossingNode
 {
     public string Id { get; }
+    public string? Name { get; set; }
     private readonly List<ITrackSegment> _connections = new(4);
     public IReadOnlyList<ITrackSegment> Connections => _connections;
 
     private (ITrackSegment A, ITrackSegment B) _line1;
     private (ITrackSegment A, ITrackSegment B) _line2;
 
-    public CrossingNode(string id)
+    public CrossingNode(string id, string? name = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(id);
         Id = id;
+        Name = name;
     }
 
+    // ... rest of the file is unchanged
     public void Connect(TrackConnection line1A, TrackConnection line1B, TrackConnection line2A, TrackConnection line2B)
     {
         if (_connections.Any())

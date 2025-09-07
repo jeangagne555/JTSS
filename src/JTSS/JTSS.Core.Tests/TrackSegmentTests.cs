@@ -16,6 +16,17 @@ public class TrackSegmentTests
         Assert.Equal(150.5, segment.Length);
         Assert.Null(segment.LeftEndNode);
         Assert.Null(segment.RightEndNode);
+        Assert.Null(segment.Name);
+    }
+
+    [Fact]
+    public void Constructor_WithName_SetsNameProperty()
+    {
+        // Arrange & Act
+        var segment = new TrackSegment("seg-1", 150.5, "Main Line East");
+
+        // Assert
+        Assert.Equal("Main Line East", segment.Name);
     }
 
     [Theory]

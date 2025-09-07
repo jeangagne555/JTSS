@@ -6,15 +6,18 @@ namespace JTSS.Core.Track;
 public class StraightNode : IStraightNode
 {
     public string Id { get; }
+    public string? Name { get; set; }
     private readonly List<ITrackSegment> _connections = new(2);
     public IReadOnlyList<ITrackSegment> Connections => _connections;
 
-    public StraightNode(string id)
+    public StraightNode(string id, string? name = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(id);
         Id = id;
+        Name = name;
     }
 
+    // ... rest of the file is unchanged
     public void Connect(TrackConnection connectionA, TrackConnection connectionB)
     {
         if (_connections.Any())

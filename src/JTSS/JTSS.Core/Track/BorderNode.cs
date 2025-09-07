@@ -1,10 +1,5 @@
 ﻿using JTSS.Core.Track.Interfaces;
 using JTSS.Core.Track.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace JTSS.Core.Track;
 
@@ -14,15 +9,18 @@ namespace JTSS.Core.Track;
 public class BorderNode : IBorderNode
 {
     public string Id { get; }
+    public string? Name { get; set; }
     private readonly List<ITrackSegment> _connections = new(1);
     public IReadOnlyList<ITrackSegment> Connections => _connections;
 
-    public BorderNode(string id)
+    public BorderNode(string id, string? name = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(id);
         Id = id;
+        Name = name;
     }
 
+    // ... rest of the file is unchanged
     /// <inheritdoc/>
     public void Connect(TrackConnection connection)
     {
