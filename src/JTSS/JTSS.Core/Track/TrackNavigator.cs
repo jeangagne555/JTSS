@@ -9,6 +9,13 @@ namespace JTSS.Core.Track;
 /// </summary>
 public class TrackNavigator : ITrackNavigator
 {
+    private readonly TrackNetwork _network;
+
+    public TrackNavigator(TrackNetwork network)
+    {
+        _network = network ?? throw new ArgumentNullException(nameof(network));
+    }
+
     /// <inheritdoc/>
     public NavigationResult? NavigateToNextSegment(ITrackSegment currentSegment, TravelDirection currentDirection)
     {
@@ -210,5 +217,44 @@ public class TrackNavigator : ITrackNavigator
 
         // They are approximately equal if the distance between them is within our tolerance.
         return distance.Value <= TrackPrecision.Tolerance;
+    }
+
+    /// <inheritdoc/>
+    public IEnumerable<(IPositionalElement Element, double DistanceAlongPath)> GetElementsInPath(ITrackPath path)
+    {
+        ArgumentNullException.ThrowIfNull(path);
+
+        var results = new List<(IPositionalElement Element, double DistanceAlongPath)>();
+
+        // This is a special case of TrackPath that we haven't implemented yet, but we will need it for this method.
+        // For now, let's assume TrackPath has a property CoveredSegments that we can use.
+        // We will need to implement this property in TrackPath.
+        var trackPath = (TrackPath)path;
+
+        foreach (var segment in trackPath.CoveredSegments)
+        {
+            var elementsOnSegment = _network.GetElementsBySegmentId(segment.Id);
+
+            foreach (var element in elementsOnSegment)
+            {
+                // Calculate distance from the path's start to the element.
+                double? distFromStart = GetDistanceBetween(path.StartPosition, element.Position);
+                if (!distFromStart.HasValue) continue; // Should not happen if logic is correct, but safe to have.
+
+                // Calculate distance from the element to the path's end.
+                double? distToEnd = GetDistanceBetween(element.Position, path.EndPosition);
+                if (!distToEnd.HasValue) continue;
+
+                // The element is on the path if the sum of the parts equals the whole length.
+                double sumOfDistances = distFromStart.Value + distToEnd.Value;
+                if (Math.Abs(sumOfDistances - path.Length) <= TrackPrecision.Tolerance)
+                {
+                    results.Add((element, distFromStart.Value));
+                }
+            }
+        }
+
+        // Return the results ordered by their distance from the start of the path.
+        return results.OrderBy(r => r.DistanceAlongPath);
     }
 }

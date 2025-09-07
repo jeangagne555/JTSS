@@ -51,4 +51,11 @@ public interface ITrackNavigator
     /// <param name="positionB">The second position.</param>
     /// <returns>True if the distance between the positions is within the defined tolerance.</returns>
     bool ArePositionsApproximatelyEqual(ITrackPosition positionA, ITrackPosition positionB);
+
+    /// <summary>
+    /// Gets an ordered collection of positional elements that exist within a given path.
+    /// </summary>
+    /// <param name="path">The track path to search within.</param>
+    /// <returns>An ordered enumerable of tuples, each containing an element and its distance from the start of the path.</returns>
+    IEnumerable<(IPositionalElement Element, double DistanceAlongPath)> GetElementsInPath(ITrackPath path);
 }

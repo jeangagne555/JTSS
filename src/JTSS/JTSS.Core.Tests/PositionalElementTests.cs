@@ -1,28 +1,9 @@
-﻿using JTSS.Core.Track;
+﻿using JTSS.Core.Tests.Classes;
+using JTSS.Core.Track;
 using JTSS.Core.Track.Enums;
 using JTSS.Core.Track.Interfaces;
 
 namespace JTSS.Core.Tests;
-
-// A minimal, concrete implementation of PositionalElement for testing purposes ONLY.
-// It lives inside the test file and is not part of the main project.
-internal class TestPositionalElement : PositionalElement
-{
-    public TestPositionalElement(string id, ITrackPosition position, string? name = null)
-        : base(id, position, name)
-    {
-    }
-}
-
-// A minimal, concrete implementation of PositionalDirectionalElement for testing.
-internal class TestPositionalDirectionalElement : PositionalDirectionalElement
-{
-    public TestPositionalDirectionalElement(string id, ITrackPosition position, TravelDirection direction, string? name = null)
-        : base(id, position, direction, name)
-    {
-    }
-}
-
 
 public class PositionalElementTests
 {

@@ -7,7 +7,7 @@ namespace JTSS.Core.Tests;
 
 public class ZoneTests
 {
-    private readonly ITrackNetwork _network;
+    private readonly TrackNetwork _network;
     private readonly ITrackNavigator _navigator;
     private readonly ITrackSegment _segA;
     private readonly ITrackSegment _segB;
@@ -16,7 +16,7 @@ public class ZoneTests
     public ZoneTests()
     {
         _network = new TrackNetwork();
-        _navigator = new TrackNavigator();
+        _navigator = new TrackNavigator(_network);
 
         // Layout: seg-A (100m) -- node -- seg-B (100m)
         _segA = _network.AddTrackSegment("seg-A", 100);

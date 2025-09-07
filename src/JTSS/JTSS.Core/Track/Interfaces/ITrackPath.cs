@@ -23,6 +23,8 @@ public interface ITrackPath
     /// </summary>
     double Length { get; }
 
+    IReadOnlyCollection<ITrackSegment> CoveredSegments { get; }
+
     /// <summary>
     /// Moves the entire path by a specified distance in a given direction.
     /// </summary>

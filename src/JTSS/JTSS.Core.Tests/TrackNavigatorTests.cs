@@ -1,4 +1,5 @@
-﻿using JTSS.Core.Track;
+﻿using JTSS.Core.Tests.Classes;
+using JTSS.Core.Track;
 using JTSS.Core.Track.Enums;
 using JTSS.Core.Track.Interfaces;
 using JTSS.Core.Track.Models;
@@ -12,14 +13,14 @@ namespace JTSS.Core.Tests;
 
 public class TrackNavigatorTests
 {
-    private readonly ITrackNetwork _network;
+    private readonly TrackNetwork _network;
     private readonly ITrackNavigator _navigator;
 
     // The constructor is our "Setup" method. It runs before every single test.
     public TrackNavigatorTests()
     {
         _network = new TrackNetwork();
-        _navigator = new TrackNavigator();
+        _navigator = new TrackNavigator(_network);
     }
 
     [Fact]
@@ -162,4 +163,79 @@ public class TrackNavigatorTests
     }
 
     #endregion
+
+    #region GetElementsInPath Tests
+
+    [Fact]
+    public void GetElementsInPath_FindsElementsOnSingleSegmentPath()
+    {
+        // Arrange
+        var segA = _network.AddTrackSegment("seg-A", 100);
+        var path = new TrackPath(new TrackPosition(segA, 10), new TrackPosition(segA, 90), _navigator);
+
+        // Add elements to the network. The network will handle storing them.
+        var elem1 = new TestPositionalElement("det-1", new TrackPosition(segA, 5.0));  // Before path
+        var elem2 = new TestPositionalElement("det-2", new TrackPosition(segA, 25.0)); // In path
+        var elem3 = new TestPositionalElement("det-3", new TrackPosition(segA, 75.0)); // In path
+        var elem4 = new TestPositionalElement("det-4", new TrackPosition(segA, 95.0)); // After path
+        _network.RegisterElementForTesting(elem1); // Helper method to add pre-made elements
+        _network.RegisterElementForTesting(elem2);
+        _network.RegisterElementForTesting(elem3);
+        _network.RegisterElementForTesting(elem4);
+
+        // Act
+        var elements = _navigator.GetElementsInPath(path).ToList();
+
+        // Assert
+        Assert.Equal(2, elements.Count);
+        Assert.Equal("det-2", elements[0].Element.Id);
+        Assert.Equal(15.0, elements[0].DistanceAlongPath, 1); // 25.0 (pos) - 10.0 (start) = 15.0
+        Assert.Equal("det-3", elements[1].Element.Id);
+        Assert.Equal(65.0, elements[1].DistanceAlongPath, 1); // 75.0 (pos) - 10.0 (start) = 65.0
+    }
+
+    [Fact]
+    public void GetElementsInPath_FindsElementsAcrossMultipleSegmentsAndOrdersThem()
+    {
+        // Arrange
+        var segA = _network.AddTrackSegment("seg-A", 100);
+        var segB = _network.AddTrackSegment("seg-B", 100);
+        var node = _network.AddStraightNode("node-1");
+        node.Connect(new(segA, SegmentEnd.Right), new(segB, SegmentEnd.Left));
+
+        var path = new TrackPath(new TrackPosition(segA, 50), new TrackPosition(segB, 50), _navigator);
+
+        var elem1 = new TestPositionalElement("det-A", new TrackPosition(segA, 75.0));
+        var elem2 = new TestPositionalElement("det-B", new TrackPosition(segB, 25.0));
+        _network.RegisterElementForTesting(elem1);
+        _network.RegisterElementForTesting(elem2);
+
+        // Act
+        var elements = _navigator.GetElementsInPath(path).ToList();
+
+        // Assert
+        Assert.Equal(2, elements.Count);
+
+        // First element is on segA. Distance = 75 - 50 = 25
+        Assert.Equal("det-A", elements[0].Element.Id);
+        Assert.Equal(25.0, elements[0].DistanceAlongPath, 1);
+
+        // Second element is on segB. Distance = (100 - 50 on segA) + 25 on segB = 75
+        Assert.Equal("det-B", elements[1].Element.Id);
+        Assert.Equal(75.0, elements[1].DistanceAlongPath, 1);
+    }
+
+    #endregion
+}
+
+// Add a helper to TrackNetwork to allow adding already-created elements for testing.
+// This is a common pattern for testability.
+public static class TrackNetworkTestExtensions
+{
+    public static void RegisterElementForTesting(this TrackNetwork network, ITrackNetworkElement element)
+    {
+        // This uses reflection to call the private method, which is acceptable for test code.
+        var method = typeof(TrackNetwork).GetMethod("RegisterElement", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        method?.Invoke(network, new object[] { element });
+    }
 }

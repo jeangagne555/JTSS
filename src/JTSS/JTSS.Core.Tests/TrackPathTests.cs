@@ -7,13 +7,13 @@ namespace JTSS.Core.Tests;
 
 public class TrackPathTests
 {
-    private readonly ITrackNetwork _network;
+    private readonly TrackNetwork _network;
     private readonly ITrackNavigator _navigator;
 
     public TrackPathTests()
     {
         _network = new TrackNetwork();
-        _navigator = new TrackNavigator();
+        _navigator = new TrackNavigator(_network);
     }
 
     #region Constructor Tests

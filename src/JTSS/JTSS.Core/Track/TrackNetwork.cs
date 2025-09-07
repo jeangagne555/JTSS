@@ -9,6 +9,11 @@ public class TrackNetwork : ITrackNetwork
 {
     private readonly Dictionary<string, ITrackNetworkElement> _elements = new();
 
+    /// <summary>
+    /// Provides an efficient spatial lookup for finding elements by the segment they reside on.
+    /// </summary>
+    private readonly Dictionary<string, List<IPositionalElement>> _elementsBySegment = new();
+
     public ITrackNetworkElement? GetElementById(string id)
     {
         _elements.TryGetValue(id, out var element);
@@ -78,5 +83,35 @@ public class TrackNetwork : ITrackNetwork
         {
             throw new ArgumentException($"An element with ID '{element.Id}' already exists in the network.");
         }
+
+        // If the new element is a positional element, also add it to our spatial lookup.
+        if (element is IPositionalElement positionalElement)
+        {
+            var segmentId = positionalElement.Position.Segment.Id;
+
+            // If this is the first element being added to this segment, create the list.
+            if (!_elementsBySegment.TryGetValue(segmentId, out var elementList))
+            {
+                elementList = new List<IPositionalElement>();
+                _elementsBySegment[segmentId] = elementList;
+            }
+
+            elementList.Add(positionalElement);
+        }
+    }
+
+    /// <summary>
+    /// Gets all positional elements located on a specific track segment.
+    /// This is an internal-facing method for the navigator to use.
+    /// </summary>
+    /// <param name="segmentId">The ID of the track segment.</param>
+    /// <returns>An enumerable of positional elements on that segment.</returns>
+    internal IEnumerable<IPositionalElement> GetElementsBySegmentId(string segmentId)
+    {
+        if (_elementsBySegment.TryGetValue(segmentId, out var elementList))
+        {
+            return elementList;
+        }
+        return Enumerable.Empty<IPositionalElement>();
     }
 }
