@@ -1,9 +1,4 @@
 ﻿using JTSS.Core.Track.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace JTSS.Core.Track;
 
@@ -28,6 +23,11 @@ public class TrackNetwork : ITrackNetwork
     public ITrackNode? GetNodeById(string id)
     {
         return GetElementById(id) as ITrackNode;
+    }
+
+    public IZone? GetZoneById(string id)
+    {
+        return GetElementById(id) as IZone;
     }
 
     public ITrackSegment AddTrackSegment(string id, double length)
@@ -63,6 +63,13 @@ public class TrackNetwork : ITrackNetwork
         var node = new BorderNode(id);
         RegisterElement(node);
         return node;
+    }
+
+    public IZone AddZone(string id)
+    {
+        var zone = new Zone(id);
+        RegisterElement(zone);
+        return zone;
     }
 
     private void RegisterElement(ITrackNetworkElement element)
