@@ -87,7 +87,6 @@ public class TrackNavigator : ITrackNavigator
                 distanceOnThisSegment = currentDistanceFromLeft;
             }
 
-            // --- START OF FIX 1: Use strict inequality ---
             // If the move distance is less than what's available, it finishes here.
             if (distanceRemaining < distanceOnThisSegment)
             {
@@ -97,7 +96,6 @@ public class TrackNavigator : ITrackNavigator
 
                 return new TrackPosition(currentSegment, finalDistanceFromLeft);
             }
-            // --- END OF FIX 1 ---
 
             // If we reach here, the move will consume the rest of the segment and cross a node.
             distanceRemaining -= distanceOnThisSegment;
@@ -118,11 +116,9 @@ public class TrackNavigator : ITrackNavigator
                 : currentSegment.Length;
         }
 
-        // --- START OF FIX 2: Handle landing exactly on a node ---
         // If the loop finishes, it means distanceRemaining is exactly 0. The final position
         // is the start of the 'currentSegment' we just transitioned to.
         return new TrackPosition(currentSegment, currentDistanceFromLeft);
-        // --- END OF FIX 2 ---
     }
 
     /// <inheritdoc/>
