@@ -1,8 +1,6 @@
-﻿using JTSS.Core.Interfaces;
-using JTSS.Core.Simulator.Interfaces;
+﻿using JTSS.Core.Simulator.Interfaces;
 using JTSS.Core.Track.Interfaces;
 using JTSS.Core.Trains.Interfaces;
-using System;
 
 namespace JTSS.Core.Trains;
 
@@ -22,6 +20,12 @@ public class Train : ITrain
 
     /// <inheritdoc/>
     public ITrackPath? Path { get; private set; }
+
+    /// <inheritdoc/>
+    public ITrackPosition? Head => Path?.StartPosition;
+
+    /// <inheritdoc/>
+    public ITrackPosition? Tail => Path?.EndPosition;
 
     private readonly ISimulationState _simulationState;
 

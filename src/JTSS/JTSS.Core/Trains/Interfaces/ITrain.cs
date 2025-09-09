@@ -22,6 +22,16 @@ public interface ITrain : IIdentifiableElement, ISimulatedElement
     ITrackPath? Path { get; }
 
     /// <summary>
+    /// The position of the head of the train. Returns null if the train is not on the track.
+    /// </summary>
+    ITrackPosition? Head { get; }
+
+    /// <summary>
+    /// The position of the tail of the train. Returns null if the train is not on the track.
+    /// </summary>
+    ITrackPosition? Tail { get; }
+
+    /// <summary>
     /// Places the train onto the track network for the first time.
     /// </summary>
     /// <param name="headPosition">The position of the very front of the train.</param>

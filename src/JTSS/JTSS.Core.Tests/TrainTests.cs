@@ -1,6 +1,5 @@
 ﻿using JTSS.Core.Simulator.Interfaces;
 using JTSS.Core.Trains;
-using System;
 using Xunit;
 
 namespace JTSS.Core.Tests;
@@ -31,7 +30,9 @@ public class TrainTests
         Assert.Equal("T-01", train.Id);
         Assert.Equal("Freight 1", train.Name);
         Assert.Equal(150.5, train.Length);
-        Assert.Null(train.Path); // Path should be null initially
+        Assert.Null(train.Path);
+        Assert.Null(train.Head); // Head should be null initially
+        Assert.Null(train.Tail); // Tail should be null initially
     }
 
     [Theory]
