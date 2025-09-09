@@ -11,5 +11,9 @@
 			<_Parameter1>JTSS.Core.Tests</_Parameter1>
 		</AssemblyAttribute>
 	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Operational\" />
+	</ItemGroup>
 	
 </Project>
