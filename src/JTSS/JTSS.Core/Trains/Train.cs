@@ -22,10 +22,10 @@ public class Train : ITrain
     public ITrackPath? Path { get; private set; }
 
     /// <inheritdoc/>
-    public ITrackPosition? Head => Path?.StartPosition;
+    public ITrackPosition? Head => Path?.EndPosition;
 
     /// <inheritdoc/>
-    public ITrackPosition? Tail => Path?.EndPosition;
+    public ITrackPosition? Tail => Path?.StartPosition;
 
     private readonly ISimulationState _simulationState;
 
