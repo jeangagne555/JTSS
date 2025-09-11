@@ -9,13 +9,14 @@ namespace JTSS.Core.Track.Interfaces;
 public interface ITrackNavigator
 {
     /// <summary>
-    /// Finds the next track segment and the new direction of travel.
+    /// Finds the next track segment a train will enter and determines the new direction of travel on that segment.
     /// </summary>
     /// <param name="currentSegment">The segment the train is currently on.</param>
     /// <param name="currentDirection">The direction the train is traveling along the current segment.</param>
     /// <returns>
-    /// A NavigationResult containing the next segment and the new travel direction,
-    /// or null if the track ends or the path is blocked.
+    /// A NavigationResult containing the next segment and the new travel direction. The new direction is calculated
+    /// based on the topology of the connection and may be different from the currentDirection (e.g., LeftToRight may become RightToLeft).
+    /// Returns null if the track ends (e.g., at a BorderNode) or the path is blocked by a switch setting.
     /// </returns>
     NavigationResult? NavigateToNextSegment(ITrackSegment currentSegment, TravelDirection currentDirection);
 
