@@ -35,7 +35,6 @@ public class TrackPath : ITrackPath
         EndPosition = endPosition ?? throw new ArgumentNullException(nameof(endPosition));
         _navigator = navigator ?? throw new ArgumentNullException(nameof(navigator));
 
-        // 1. Calculate the length of the path.
         double? length = _navigator.GetDistanceBetween(StartPosition, EndPosition);
         if (!length.HasValue)
         {
@@ -43,11 +42,12 @@ public class TrackPath : ITrackPath
         }
         Length = length.Value;
 
-        // 2. Determine the "Forward" TravelDirection for the StartPosition.
+        // 1. Determine the "Forward" TravelDirection for the StartPosition. This part of the logic was correct.
         _startTravelDirectionForward = DetermineForwardDirection(StartPosition, EndPosition);
 
-        // 3. Determine the "Forward" TravelDirection for the EndPosition.
-        _endTravelDirectionForward = DetermineForwardDirection(EndPosition, StartPosition, true);
+        // 2. Determine the "Forward" TravelDirection for the EndPosition by traversing the path.
+        // This is the new, robust implementation that replaces the faulty logic.
+        _endTravelDirectionForward = FindEndDirection();
 
         _coveredSegmentIds = new HashSet<string>();
         var segmentList = new List<ITrackSegment>();
@@ -197,18 +197,13 @@ public class TrackPath : ITrackPath
     /// <summary>
     /// Determines the TravelDirection that moves point A towards point B.
     /// </summary>
-    private TravelDirection DetermineForwardDirection(ITrackPosition posA, ITrackPosition posB, bool isEndPoint = false)
+    private TravelDirection DetermineForwardDirection(ITrackPosition posA, ITrackPosition posB)
     {
-        // On the same segment, the logic is simple.
         if (posA.Segment.Id == posB.Segment.Id)
         {
-            bool movesRight = posB.DistanceFromLeftEnd > posA.DistanceFromLeftEnd;
-            return isEndPoint ? (movesRight ? TravelDirection.LeftToRight : TravelDirection.RightToLeft)
-                              : (movesRight ? TravelDirection.LeftToRight : TravelDirection.RightToLeft);
+            return posB.DistanceFromLeftEnd > posA.DistanceFromLeftEnd ? TravelDirection.LeftToRight : TravelDirection.RightToLeft;
         }
 
-        // On different segments, we test a tiny move in each direction from posA
-        // and see which one gets closer to posB.
         const double Epsilon = 0.01;
 
         ITrackPosition? posAfterMovingRight = _navigator.MovePosition(posA, TravelDirection.LeftToRight, Epsilon);
@@ -219,20 +214,10 @@ public class TrackPath : ITrackPath
 
         double originalDist = _navigator.GetDistanceBetween(posA, posB)!.Value;
 
-        // Logic for the start point: Forward is the direction that REDUCES the distance to the end.
-        if (!isEndPoint)
-        {
-            if (distAfterRight.HasValue && distAfterRight < originalDist) return TravelDirection.LeftToRight;
-            if (distAfterLeft.HasValue && distAfterLeft < originalDist) return TravelDirection.RightToLeft;
-        }
-        // Logic for the end point: Forward is the direction that INCREASES the distance to the start.
-        else
-        {
-            if (distAfterRight.HasValue && distAfterRight > originalDist) return TravelDirection.LeftToRight;
-            if (distAfterLeft.HasValue && distAfterLeft > originalDist) return TravelDirection.RightToLeft;
-        }
+        // This logic is only used for the start point, so we only need to find the direction that reduces distance.
+        if (distAfterRight.HasValue && distAfterRight < originalDist) return TravelDirection.LeftToRight;
+        if (distAfterLeft.HasValue && distAfterLeft < originalDist) return TravelDirection.RightToLeft;
 
-        // Fallback for edge cases (e.g., at the very end of a segment)
         if (posAfterMovingLeft == null) return TravelDirection.LeftToRight;
         return TravelDirection.RightToLeft;
     }
@@ -282,5 +267,38 @@ public class TrackPath : ITrackPath
                 break;
             }
         }
+    }
+
+    /// <summary>
+    /// Traverses the path from start to end to definitively find the TravelDirection on the final segment.
+    /// </summary>
+    private TravelDirection FindEndDirection()
+    {
+        // If the path is on a single segment, the start and end directions are the same.
+        if (StartPosition.Segment.Id == EndPosition.Segment.Id)
+        {
+            return _startTravelDirectionForward;
+        }
+
+        // Otherwise, we navigate from the start segment until we reach the end segment.
+        var currentSegment = StartPosition.Segment;
+        var currentDirection = _startTravelDirectionForward;
+
+        while (currentSegment.Id != EndPosition.Segment.Id)
+        {
+            var navResult = _navigator.NavigateToNextSegment(currentSegment, currentDirection);
+
+            // This should never happen in a valid, pre-verified path.
+            if (navResult == null)
+            {
+                throw new InvalidOperationException("Path traversal failed unexpectedly while determining end direction.");
+            }
+
+            currentSegment = navResult.NextSegment;
+            currentDirection = navResult.NewDirection;
+        }
+
+        // The final direction is the one on the EndPosition's segment.
+        return currentDirection;
     }
 }

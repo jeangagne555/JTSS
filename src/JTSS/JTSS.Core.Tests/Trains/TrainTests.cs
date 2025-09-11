@@ -1,5 +1,6 @@
 ﻿using JTSS.Core.Simulator.Enums;
 using JTSS.Core.Simulator.Interfaces;
+using JTSS.Core.Tests.Classes;
 using JTSS.Core.Track;
 using JTSS.Core.Track.Enums;
 using JTSS.Core.Track.Interfaces;
@@ -195,5 +196,88 @@ public class TrainTests
     }
 
     #endregion
-    // --- END OF NEW REGION ---
+
+    #region Movement Tests
+
+    [Fact]
+    public void Move_ForwardOnSingleSegment_UpdatesHeadAndTailCorrectly()
+    {
+        // Arrange
+        var segA = _network.AddTrackSegment("seg-A", 500);
+        // --- START OF CHANGE ---
+        var train = new TestableTrain("T-01", 100, _simulationState, _navigator);
+        train.Place(new TrackPosition(segA, 200), TravelDirection.LeftToRight); // Tail @ 100, Head @ 200
+
+        // Act
+        bool success = train.MoveProxy(PathDirection.Forward, 50);
+        // --- END OF CHANGE ---
+
+        // Assert
+        Assert.True(success);
+        Assert.NotNull(train.Path);
+        Assert.Equal(150, train.Tail.DistanceFromLeftEnd);
+        Assert.Equal(250, train.Head.DistanceFromLeftEnd);
+        Assert.Equal(100, train.Path.Length, 1);
+    }
+
+    [Fact]
+    public void Move_ForwardAcrossNode_UpdatesHeadAndTailCorrectly()
+    {
+        // Arrange
+        var segA = _network.AddTrackSegment("seg-A", 300);
+        var segB = _network.AddTrackSegment("seg-B", 200);
+        _network.AddStraightNode("node-AB").Connect(new(segA, SegmentEnd.Right), new(segB, SegmentEnd.Left));
+
+        // --- START OF CHANGE ---
+        var train = new TestableTrain("T-01", 100, _simulationState, _navigator);
+        train.Place(new TrackPosition(segA, 280), TravelDirection.LeftToRight);
+
+        // Act
+        bool success = train.MoveProxy(PathDirection.Forward, 40);
+        // --- END OF CHANGE ---
+
+        // Assert
+        Assert.True(success);
+        Assert.NotNull(train.Path);
+        Assert.Equal(segB.Id, train.Head.Segment.Id);
+        Assert.Equal(20, train.Head.DistanceFromLeftEnd, 1);
+        Assert.Equal(segA.Id, train.Tail.Segment.Id);
+        Assert.Equal(220, train.Tail.DistanceFromLeftEnd, 1);
+    }
+
+    [Fact]
+    public void Move_MovesOffTrack_ReturnsFalseAndPathBecomesNull()
+    {
+        // Arrange
+        var segA = _network.AddTrackSegment("seg-A", 100);
+        _network.AddBorderNode("border-R").Connect(new(segA, SegmentEnd.Right));
+        // --- START OF CHANGE ---
+        var train = new TestableTrain("T-01", 50, _simulationState, _navigator);
+        train.Place(new TrackPosition(segA, 80), TravelDirection.LeftToRight);
+
+        // Act
+        bool success = train.MoveProxy(PathDirection.Forward, 30);
+        // --- END OF CHANGE ---
+
+        // Assert
+        Assert.False(success);
+        Assert.Null(train.Path);
+        Assert.Null(train.Head);
+        Assert.Null(train.Tail);
+    }
+
+    [Fact]
+    public void Move_BeforePlacement_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        // --- START OF CHANGE ---
+        var train = new TestableTrain("T-01", 100, _simulationState, _navigator);
+
+        // Act & Assert
+        var ex = Assert.Throws<InvalidOperationException>(() => train.MoveProxy(PathDirection.Forward, 10));
+        // --- END OF CHANGE ---
+        Assert.Contains("has not been placed", ex.Message);
+    }
+
+    #endregion
 }

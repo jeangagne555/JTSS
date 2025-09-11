@@ -97,6 +97,35 @@ public class Train : ITrain
     }
 
     /// <summary>
+    /// Moves the train along its path by a specified distance. This method is protected
+    /// and is intended to be called by the Update loop or for testing via a subclass.
+    /// </summary>
+    /// <param name="direction">The direction to move (Forward or Backward) relative to the train's path.</param>
+    /// <param name="distanceInMeters">The distance to move. Must be non-negative.</param>
+    /// <returns>True if the move was successful; false if the train moved off the end of the track.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if the train has not been placed on the track yet.</exception>
+    protected virtual bool Move(PathDirection direction, double distanceInMeters)
+    {
+        if (this.Path == null)
+        {
+            throw new InvalidOperationException("Cannot move a train that has not been placed on the track.");
+        }
+        if (distanceInMeters < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(distanceInMeters), "Distance must be non-negative.");
+        }
+        if (distanceInMeters == 0)
+        {
+            return true;
+        }
+
+        var newPath = this.Path.Move(direction, distanceInMeters);
+        this.Path = newPath;
+
+        return this.Path != null;
+    }
+
+    /// <summary>
     /// Gets the opposite travel direction.
     /// </summary>
     private static TravelDirection OppositeDirection(TravelDirection direction)
