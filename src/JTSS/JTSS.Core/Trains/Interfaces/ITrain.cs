@@ -1,5 +1,6 @@
 ﻿using JTSS.Core.Interfaces;
 using JTSS.Core.Simulator.Interfaces;
+using JTSS.Core.Track.Enums;
 using JTSS.Core.Track.Interfaces;
 
 namespace JTSS.Core.Trains.Interfaces;
@@ -32,8 +33,14 @@ public interface ITrain : IIdentifiableElement, ISimulatedElement
     ITrackPosition? Tail { get; }
 
     /// <summary>
-    /// Places the train onto the track network for the first time.
+    /// Places the train onto the track network for the first time. This action creates the
+    /// initial path that the train occupies, based on its length.
     /// </summary>
     /// <param name="headPosition">The position of the very front of the train.</param>
-    void Place(ITrackPosition headPosition);
+    /// <param name="initialDirection">The initial direction the train is facing.</param>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown if the train has already been placed, or if the train is too long
+    /// to fit on the track from the specified head position.
+    /// </exception>
+    void Place(ITrackPosition headPosition, TravelDirection initialDirection);
 }

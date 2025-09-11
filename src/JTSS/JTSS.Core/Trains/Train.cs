@@ -1,4 +1,6 @@
 ﻿using JTSS.Core.Simulator.Interfaces;
+using JTSS.Core.Track;
+using JTSS.Core.Track.Enums;
 using JTSS.Core.Track.Interfaces;
 using JTSS.Core.Trains.Interfaces;
 
@@ -28,6 +30,7 @@ public class Train : ITrain
     public ITrackPosition? Tail => Path?.StartPosition;
 
     private readonly ISimulationState _simulationState;
+    private readonly ITrackNavigator _navigator;
 
     /// <summary>
     /// Initializes a new instance of the Train class.
@@ -36,7 +39,15 @@ public class Train : ITrain
     /// <param name="length">The length of the train in meters.</param>
     /// <param name="simulationState">The state of the simulation.</param>
     /// <param name="name">An optional, user-friendly name for the train.</param>
-    public Train(string id, double length, ISimulationState simulationState, string? name = null)
+    /// <summary>
+    /// Initializes a new instance of the Train class.
+    /// </summary>
+    /// <param name="id">The unique identifier for the train.</param>
+    /// <param name="length">The length of the train in meters.</param>
+    /// <param name="simulationState">The state of the simulation.</param>
+    /// <param name="navigator">The track navigator service, required for placement and movement.</param>
+    /// <param name="name">An optional, user-friendly name for the train.</param>
+    public Train(string id, double length, ISimulationState simulationState, ITrackNavigator navigator, string? name = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(id);
         if (length <= 0)
@@ -48,6 +59,7 @@ public class Train : ITrain
         Name = name;
         Length = length;
         _simulationState = simulationState ?? throw new ArgumentNullException(nameof(simulationState));
+        _navigator = navigator ?? throw new ArgumentNullException(nameof(navigator)); // Store the navigator
     }
 
     /// <inheritdoc/>
@@ -58,9 +70,39 @@ public class Train : ITrain
     }
 
     /// <inheritdoc/>
-    public void Place(ITrackPosition headPosition)
+    public void Place(ITrackPosition headPosition, TravelDirection initialDirection)
     {
-        // We will implement the logic to calculate the train's initial path later.
-        throw new NotImplementedException();
+        ArgumentNullException.ThrowIfNull(headPosition);
+
+        // 1. Ensure the train has not already been placed.
+        if (this.Path != null)
+        {
+            throw new InvalidOperationException($"Train '{Id}' has already been placed on the track.");
+        }
+
+        // 2. Determine the direction to move backward to find the tail.
+        var tailDirection = OppositeDirection(initialDirection);
+
+        // 3. Use the navigator to find the tail position by moving backward from the head.
+        ITrackPosition? tailPosition = _navigator.MovePosition(headPosition, tailDirection, this.Length);
+
+        // 4. Validate that the placement was successful.
+        if (tailPosition == null)
+        {
+            throw new InvalidOperationException($"Cannot place train '{Id}'. The train is too long ({Length}m) to fit on the track from the specified head position.");
+        }
+
+        // 5. Create the initial path. Remember, the Tail is the StartPosition and the Head is the EndPosition.
+        this.Path = new TrackPath(tailPosition, headPosition, _navigator);
+    }
+
+    /// <summary>
+    /// Gets the opposite travel direction.
+    /// </summary>
+    private static TravelDirection OppositeDirection(TravelDirection direction)
+    {
+        return direction == TravelDirection.LeftToRight
+            ? TravelDirection.RightToLeft
+            : TravelDirection.LeftToRight;
     }
 }
