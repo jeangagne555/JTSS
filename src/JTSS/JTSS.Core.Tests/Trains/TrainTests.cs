@@ -1,14 +1,15 @@
-﻿using JTSS.Core.Simulator.Interfaces;
+﻿using JTSS.Core.Simulator.Enums;
+using JTSS.Core.Simulator.Interfaces;
 using JTSS.Core.Trains;
 using Xunit;
 
-namespace JTSS.Core.Tests;
+namespace JTSS.Core.Tests.Trains;
 
 // A simple test double for ISimulationState
 internal class TestSimulationState : ISimulationState
 {
     public TimeSpan CurrentTime { get; set; }
-    public Simulator.Enums.SimulationStatus Status { get; set; }
+    public SimulationStatus Status { get; set; }
 }
 
 public class TrainTests

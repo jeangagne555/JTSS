@@ -2,7 +2,7 @@
 using JTSS.Core.Track.Enums;
 using JTSS.Core.Track.Models;
 
-namespace JTSS.Core.Tests;
+namespace JTSS.Core.Tests.Track;
 
 public class StraightNodeTests
 {

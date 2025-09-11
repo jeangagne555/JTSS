@@ -1,7 +1,7 @@
 ﻿using JTSS.Core.Simulator;
 using JTSS.Core.Simulator.Interfaces;
 
-namespace JTSS.Core.Tests;
+namespace JTSS.Core.Tests.Simulator;
 
 // Test double is unchanged
 internal class TestSimulatedElement : ISimulatedElement

@@ -3,7 +3,7 @@ using JTSS.Core.Track;
 using JTSS.Core.Track.Enums;
 using JTSS.Core.Track.Interfaces;
 
-namespace JTSS.Core.Tests;
+namespace JTSS.Core.Tests.Track;
 
 public class PositionalElementTests
 {

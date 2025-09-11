@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace JTSS.Core.Tests;
+namespace JTSS.Core.Tests.Track;
 
 public class TrackPositionTests
 {

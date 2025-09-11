@@ -3,7 +3,7 @@ using JTSS.Core.Track.Enums;
 using JTSS.Core.Track.Interfaces;
 using JTSS.Core.Track.Models;
 
-namespace JTSS.Core.Tests;
+namespace JTSS.Core.Tests.Track;
 
 public class TrackPathTests
 {
@@ -24,7 +24,7 @@ public class TrackPathTests
         var (segA, segB) = BuildStraightLayout();
         var startPos = new TrackPosition(segA, 20.0);
         var endPos = new TrackPosition(segB, 80.0);
-        double expectedLength = (100.0 - 20.0) + 80.0;
+        double expectedLength = 100.0 - 20.0 + 80.0;
 
         var path = new TrackPath(startPos, endPos, _navigator);
 
@@ -172,7 +172,7 @@ public class TrackPathTests
         var path1_start = new TrackPosition(segA, 10.0);
         var path1_end = new TrackPosition(segA, 50.0);
 
-        var path2_start = new TrackPosition(segA, 50.0 + (TrackPrecision.Tolerance / 2));
+        var path2_start = new TrackPosition(segA, 50.0 + TrackPrecision.Tolerance / 2);
         var path2_end = new TrackPosition(segA, 90.0);
 
         var path1 = new TrackPath(path1_start, path1_end, _navigator);

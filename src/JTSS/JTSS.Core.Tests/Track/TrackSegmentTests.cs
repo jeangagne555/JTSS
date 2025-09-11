@@ -1,7 +1,7 @@
 ﻿using JTSS.Core.Track;
 using JTSS.Core.Track.Enums;
 
-namespace JTSS.Core.Tests;
+namespace JTSS.Core.Tests.Track;
 
 public class TrackSegmentTests
 {

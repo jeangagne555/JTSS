@@ -9,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace JTSS.Core.Tests;
+namespace JTSS.Core.Tests.Track;
 
 public class TrackNavigatorTests
 {
@@ -98,7 +98,7 @@ public class TrackNavigatorTests
         // Arrange
         var segA = _network.AddTrackSegment("seg-A", 100);
         var pos1 = new TrackPosition(segA, 50.0);
-        var pos2 = new TrackPosition(segA, 50.0 + (TrackPrecision.Tolerance / 2)); // e.g. 50.05
+        var pos2 = new TrackPosition(segA, 50.0 + TrackPrecision.Tolerance / 2); // e.g. 50.05
 
         // Act
         var result = _navigator.ArePositionsApproximatelyEqual(pos1, pos2);
@@ -132,9 +132,9 @@ public class TrackNavigatorTests
         node.Connect(new TrackConnection(segA, SegmentEnd.Right), new TrackConnection(segB, SegmentEnd.Left));
 
         // Position A is on seg-A, just before the end.
-        var posA = new TrackPosition(segA, 100.0 - (TrackPrecision.Tolerance / 2)); // e.g. 99.95
+        var posA = new TrackPosition(segA, 100.0 - TrackPrecision.Tolerance / 2); // e.g. 99.95
         // Position B is on seg-B, just after the start.
-        var posB = new TrackPosition(segB, 0.0 + (TrackPrecision.Tolerance / 2));   // e.g. 0.05
+        var posB = new TrackPosition(segB, 0.0 + TrackPrecision.Tolerance / 2);   // e.g. 0.05
 
         // Act
         var result = _navigator.ArePositionsApproximatelyEqual(posA, posB);
