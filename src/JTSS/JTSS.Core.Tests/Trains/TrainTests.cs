@@ -267,6 +267,77 @@ public class TrainTests
     }
 
     [Fact]
+    public void Move_ForwardAndBackwardAcrossSwitchback_ReturnsToOriginalPosition()
+    {
+        // ARRANGE
+
+        // 1. Build a "Z" shaped track network with two direction reversals.
+        //    A (L->R) --node1-- (R->L) B --node2-- (L->R) C
+        var segA = _network.AddTrackSegment("seg-Z-A", 100);
+        var segB = _network.AddTrackSegment("seg-Z-B", 100);
+        var segC = _network.AddTrackSegment("seg-Z-C", 100);
+
+        // Connection 1: A.Right -> B.Right (First reversal)
+        var node1 = _network.AddStraightNode("node-Z-1");
+        node1.Connect(new(segA, SegmentEnd.Right), new(segB, SegmentEnd.Right));
+
+        // Connection 2: B.Left -> C.Left (Second reversal)
+        var node2 = _network.AddStraightNode("node-Z-2");
+        node2.Connect(new(segB, SegmentEnd.Left), new(segC, SegmentEnd.Left));
+
+        // 2. Place a train so its body spans the first reversal (from segA to segB).
+        var train = new TestableTrain("T-Switchback", 80, _simulationState, _navigator);
+        // The natural path from A to B is L->R on A, then R->L on B.
+        // We will place the head at 70m from the left end of B.
+        var initialHeadPos = new TrackPosition(segB, 70.0);
+
+        // Place the train facing "backward" relative to segment B's orientation,
+        // which is "forward" along the path from A -> B -> C.
+        train.Place(initialHeadPos, TravelDirection.RightToLeft);
+
+        // 3. Verify initial placement and store original positions.
+        // Head is at B, 70. It occupies 30m of B (from 100 to 70).
+        // Tail is 50m into A (from 100 to 50).
+        var originalHead = train.Head;
+        var originalTail = train.Tail;
+
+        Assert.NotNull(originalHead);
+        Assert.NotNull(originalTail);
+        Assert.Equal(segB.Id, originalHead.Segment.Id);
+        Assert.Equal(70.0, originalHead.DistanceFromLeftEnd);
+        Assert.Equal(segA.Id, originalTail.Segment.Id);
+        Assert.Equal(50.0, originalTail.DistanceFromLeftEnd);
+
+        double moveDistance = 40.0;
+
+        // ACT 1: Move the train forward.
+        bool forwardSuccess = train.MoveProxy(PathDirection.Forward, moveDistance);
+
+        // ASSERT 1: Verify the new position.
+        Assert.True(forwardSuccess);
+        Assert.NotNull(train.Head);
+        Assert.NotNull(train.Tail);
+
+        // Head was at B, 70. Moved forward (R->L) by 40m. New pos: 70 - 40 = 30.
+        Assert.Equal(segB.Id, train.Head.Segment.Id);
+        Assert.Equal(30.0, train.Head.DistanceFromLeftEnd, 1);
+
+        // Tail was at A, 50. Moved forward (L->R) by 40m. New pos: 50 + 40 = 90.
+        Assert.Equal(segA.Id, train.Tail.Segment.Id);
+        Assert.Equal(90.0, train.Tail.DistanceFromLeftEnd, 1);
+
+        // ACT 2: Move the train backward by the same distance.
+        bool backwardSuccess = train.MoveProxy(PathDirection.Backward, moveDistance);
+
+        // ASSERT 2: Verify the train has returned to its exact original position.
+        Assert.True(backwardSuccess);
+
+        // Assert.Equal uses the record's value-based equality, which is perfect here.
+        Assert.Equal(originalHead, train.Head);
+        Assert.Equal(originalTail, train.Tail);
+    }
+
+    [Fact]
     public void Move_BeforePlacement_ThrowsInvalidOperationException()
     {
         // Arrange
